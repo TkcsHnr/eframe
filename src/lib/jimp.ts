@@ -68,10 +68,10 @@ export async function floydSteinbergDither(
 
 	let prevColor = 0;
 	const pixelPairArray: number[] = [];
-	const pixelMatrix: number[][] = [];
+	// const pixelMatrix: number[][] = [];
 
 	for (let y = 0; y < h; y++) {
-		pixelMatrix.push([]);
+		// pixelMatrix.push([]);
 		for (let x = 0; x < w; x++) {
 			let oldPixel = intToRGBA(image.getPixelColor(x, y));
 			let newPixel = findClosestPaletteColor(oldPixel, palette);
@@ -79,7 +79,7 @@ export async function floydSteinbergDither(
 			let hex = toHex(newPixel);
 			image.setPixelColor(hex, x, y);
 
-			pixelMatrix[y].push(displayHexMap[hex]);
+			// pixelMatrix[y].push(displayHexMap[hex]);
 			if (x % 2 == 0) prevColor = displayHexMap[hex];
 			else pixelPairArray.push((prevColor << 4) | displayHexMap[hex]);
 
@@ -119,5 +119,5 @@ export async function floydSteinbergDither(
 	if (portrait) image.rotate(-90);
 	const srcBase64 = await image.getBase64('image/bmp');
 
-	return { srcBase64, pixelPairArray, pixelMatrix };
+	return { srcBase64, pixelPairArray /*pixelMatrix*/ };
 }
