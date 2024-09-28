@@ -19,7 +19,7 @@
 </script>
 
 <main class="w-full h-full flex flex-col gap-8 items-center p-8 bg-base-300">
-	<form method="post" enctype="multipart/form-data" class="flex gap-4 flex-wrap">
+	<form method="post" action="?/convert" enctype="multipart/form-data" class="flex gap-4 flex-wrap">
 		<input
 			type="file"
 			name="file"
@@ -45,7 +45,22 @@
 			alt="uploaded"
 			class="{portrait ? 'w-[448px] h-[600px]' : 'w-[600px] h-[448px]'} object-cover"
 		/>
-	{:else if form?.src}
+	{:else if form}
 		<img src={form.src} alt="from server" />
+		<form method="post" action="?/upload" enctype="multipart/form-data">
+			<input
+				type="text"
+				name="pixelArrayString"
+				hidden
+				value={form.pixelArrayString}
+			/>
+			<input
+				type="text"
+				name="base64"
+				hidden
+				value={form.src}
+			/>
+			<button class="btn btn-success">Upload</button>
+		</form>
 	{/if}
 </main>
