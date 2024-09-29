@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import ImageControl from './ImageControl.svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -68,48 +69,9 @@
 		</form>
 	</div>
 </dialog>
-<div class="flex flex-wrap gap-4 justify-center">
+
+<div class="grid grid-cols-2 sm:flex flex-wrap max-w-5xl gap-4 justify-center">
 	{#each data.images as image}
-		<div class:dropdown={data.current_id != image.id} >
-			<div
-				tabindex="0"
-				role="button"
-				class="h-fit p-4 mb-1 rounded-box bg-base-200 shadow border border-base-300 indicator
-				{data.current_id == image.id ? 'outline outline-info outline-4' : ''}"
-				on:contextmenu|preventDefault
-			>
-				<img class="h-52" src={image.base64} alt="uploaded" />
-				{#if data.current_id == image.id}
-					<span class="indicator-item indicator-center badge badge-info">current</span>
-				{/if}
-			</div>
-			<!-- svelte-ignore a11y-missing-attribute -->
-			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-			{#if data.current_id != image.id}
-				<ul
-					tabindex="0"
-					class="dropdown-content menu bg-base-200 rounded-box z-[1] max-w-52 w-full p-2 shadow"
-				>
-					<li>
-						<form action="?/set_current" method="post" class="flex">
-							<input type="number" name="id" hidden value={image.id} />
-							<button type="submit" class="text-left grow">
-								<i class="fa-solid fa-paper-plane"></i>
-								Set as current
-							</button>
-						</form>
-					</li>
-					<li>
-						<form action="?/delete" method="post" class="flex">
-							<input type="number" name="id" hidden value={image.id} />
-							<button type="submit" class="link-error text-left grow">
-								<i class="fa-solid fa-trash-can"></i>
-								Delete
-							</button>
-						</form>
-					</li>
-				</ul>
-			{/if}
-		</div>
+		<ImageControl {image} current_id={data.current_id}></ImageControl>
 	{/each}
 </div>

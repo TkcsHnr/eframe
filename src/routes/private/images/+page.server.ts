@@ -4,13 +4,16 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals: { supabase } }) => {
 	const { data: images } = await supabase
 		.from('images')
-		.select('id,base64')
+		.select('id,base64,portrait')
 		.order('created_at', { ascending: false });
 
 	const { data: current } = await supabase.from('current').select('image_id').single();
 	const current_id = current?.image_id;
 
-	return { images: images ?? [], current_id };
+	return {
+		images: images || [],
+		current_id
+	};
 };
 
 export const actions = {
