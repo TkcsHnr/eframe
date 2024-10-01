@@ -47,6 +47,6 @@
 		<a href="/auth" class="link">Login</a>
 	{/if}
 </header>
-<main class="flex flex-col items-center w-full min-h-full p-4 gap-8 pt-8">
+<main class="flex flex-col items-center w-full min-h-full p-4 gap-4 pt-8">
 	<slot />
 </main>
