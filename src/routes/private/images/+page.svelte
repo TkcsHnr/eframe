@@ -70,8 +70,8 @@
 	</div>
 </dialog>
 
-<div class="grid grid-cols-2 sm:flex flex-wrap max-w-5xl gap-4 justify-center">
+<div class="grid grid-cols-2 sm:flex flex-wrap max-w-5xl gap-4 pb-32 justify-center">
 	{#each data.images as image}
-		<ImageControl {image} current_id={data.current_id}></ImageControl>
+		<ImageControl {image} ></ImageControl>
 	{/each}
 </div>
