@@ -13,9 +13,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	});
 
 	const mailOptions = {
-		from: email,
+		from: 'ESP32 eFrame',
 		to: 'tkcshnr@gmail.com',
-		subject: 'Log report',
+		subject: 'Daily report',
 		text: message
 	};
 
