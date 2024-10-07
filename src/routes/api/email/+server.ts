@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	};
 
 	try {
-		transporter.sendMail(mailOptions);
+		await transporter.sendMail(mailOptions);
 		return new Response();
 	} catch (error: any) {
 		return new Response(JSON.stringify({ error: error.message }), {
