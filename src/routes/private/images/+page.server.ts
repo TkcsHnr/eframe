@@ -1,27 +1,57 @@
 import { floydSteinbergDither } from '$lib/jimp';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals: { supabase } }) => {
-	const { data: images, error: imagesError } = await supabase
-		.from('images')
-		.select('id,base64,portrait')
-		.order('created_at', { ascending: false });
-	if (imagesError) return { error: imagesError };
+type ImageRecord = { id: number; portrait: boolean };
+type Image = { id: number; pngUrl: string; portrait: boolean };
+type QueueRecord = { id: number; image_id: number; position: number };
+type UrlObject = { path: string; signedUrl: string };
 
-	const { data: queue, error: queueError } = await supabase
+export const load = (async ({ locals: { supabase } }) => {
+	// getting id,portrait from db
+	const { data: imageData, error: imageError } = await supabase
+		.from('images')
+		.select('id, portrait')
+		.order('created_at', { ascending: false });
+	if (imageError) return { error: imageError };
+	if (imageData.length == 0) return { images: [], queue: [] };
+	const fileNames = imageData.map((img: ImageRecord) => `${img.id}.png`);
+
+	// creating signed urls (1 hour)
+	const { data: urlObjects, error: urlError } = await supabase.storage
+		.from('images')
+		.createSignedUrls(fileNames, 60 * 60);
+	if (urlError) return { error: urlError };
+
+	const signedUrls: { [path: string]: string } = {};
+	urlObjects.forEach((urlObj: UrlObject) => {
+		signedUrls[urlObj.path] = urlObj.signedUrl;
+	});
+
+	// creating image objects
+	const images = imageData.map((img: ImageRecord) => {
+		const pngUrl = signedUrls[`${img.id}.png`];
+
+		return { id: img.id, pngUrl, portrait: img.portrait };
+	});
+
+	// getting queue items
+	const { data: queueImages, error: queueError } = await supabase
 		.from('queue')
-		.select('id, position, image:images(id, base64, portrait)')
+		.select('id, image_id, position')
 		.order('position');
 	if (queueError) return { error: queueError };
 
-	return {
-		images: images || [],
-		queue: queue || []
-	};
-};
+	const queue = queueImages.map((record: QueueRecord) => {
+		const image = images.find((img: Image) => img.id == record.image_id);
+		return {
+			id: record.id,
+			position: record.position,
+			image
+		};
+	});
 
-//TODO: add multiple images
-//TODO: auto image orientation mode in jimp convert
+	return { images: images || [], queue: queue || [] };
+}) satisfies PageServerLoad;
 
 export const actions = {
 	uploadImage: async ({ request, locals: { supabase } }) => {
@@ -30,23 +60,50 @@ export const actions = {
 		const portrait: boolean = (formData.get('portrait') as boolean | null) || false;
 
 		const fileBuffer = await file.arrayBuffer();
-		const { base64, pixelArray } = await floydSteinbergDither(fileBuffer, portrait);
+		const { buffer, byteArray } = await floydSteinbergDither(fileBuffer, portrait);
 
-		const { error } = await supabase.from('images').insert([{ pixelArray, base64, portrait }]);
-		return { error };
+		// inserting id into table
+		const { data: insertData, error: idError } = await supabase
+			.from('images')
+			.insert({ portrait })
+			.select('id')
+			.single();
+		if (idError) return { error: idError };
+
+		const id = insertData.id;
+		// uploading bin file to storage
+		const { error: binError } = await supabase.storage
+			.from('images')
+			.upload(`${id}.bin`, byteArray, { contentType: 'application/octet-stream' });
+		if (binError) return { error: binError };
+
+		// uploading png file to storage
+		const { error: pngError } = await supabase.storage
+			.from('images')
+			.upload(`${id}.png`, buffer, { contentType: 'image/png' });
+		if (pngError) return { error: pngError };
 	},
 	deleteImage: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const id = formData.get('image_id');
 
+		// removing occurences from queue
 		const { error: queueError } = await supabase.from('queue').delete().eq('image_id', id);
 		if (queueError) return { error: queueError };
 
+		// normalizing queue positions
 		const { error: positionError } = await supabase.rpc('normalizePositions');
 		if (positionError) return { error: positionError };
 
-		const { error } = await supabase.from('images').delete().eq('id', id);
-		return { error };
+		// removing id from table
+		const { error: idError } = await supabase.from('images').delete().eq('id', id);
+		if (idError) return { error: idError };
+
+		// deleting files from storage
+		const { error: storageError } = await supabase.storage
+			.from('images')
+			.remove([`${id}.bin`, `${id}.png`]);
+		if (storageError) return { error: storageError };
 	},
 	addToQueueEnd: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();

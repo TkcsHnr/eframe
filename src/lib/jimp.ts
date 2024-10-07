@@ -114,7 +114,8 @@ export async function floydSteinbergDither(
 	}
 
 	if (portrait) image.rotate(-90);
-	const base64 = await image.getBase64('image/bmp');
+	const buffer = await image.getBuffer("image/png");
+	const byteArray = new Uint8Array(pixelArray);
 
-	return { base64, pixelArray };
+	return {byteArray, buffer };
 }

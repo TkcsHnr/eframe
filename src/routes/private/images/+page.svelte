@@ -14,7 +14,7 @@
 	</div>
 {/if}
 
-{#if data.queue.length > 0}
+{#if data.queue && data.queue.length > 0}
 	<div class="flex items-center">
 		<h2 class="text-2xl font-bold">Queue</h2>
 		<div class="divider divider-horizontal"></div>
