@@ -5,7 +5,6 @@
 	import { invalidate, invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { redirect } from '@sveltejs/kit';
 
 	export let data;
 	$: ({ session, supabase } = data);

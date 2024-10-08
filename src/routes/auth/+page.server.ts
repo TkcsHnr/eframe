@@ -17,6 +17,6 @@ export const actions: Actions = {
 		if (redirectTo) {
 			redirect(303, `/${redirectTo.slice(1)}`);
 		}
-		redirect(303, '/');
+		redirect(303, '/private/images');
 	}
 };
