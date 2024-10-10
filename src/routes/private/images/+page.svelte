@@ -6,6 +6,18 @@
 
 	export let data: PageData;
 	export let form: ActionData;
+
+	let sleepSeconds = data.sleepSeconds;
+	function secondsToTime(seconds: number) {
+		let hours = Math.floor(seconds / 3600)
+			.toString()
+			.padStart(2, '0');
+		let minutes = Math.floor((seconds % 3600) / 60)
+			.toString()
+			.padStart(2, '0');
+
+		return hours + ':' + minutes;
+	}
 </script>
 
 {#if form?.error}
@@ -41,6 +53,14 @@
 		{/each}
 	</div>
 {/if}
+
+<form action="?/updateTime" method="post" class="flex items-center gap-2 w-full max-w-md">
+	<label for="time" class="badge badge-neutral">{secondsToTime(sleepSeconds)}</label>
+	<input bind:value={sleepSeconds} type="range" min="0" max="86400" step="1800" class="range" name="seconds" />
+	<button type="submit" class="btn btn-success btn-sm btn-circle">
+		<i class="fa-solid fa-right-from-bracket"></i>
+	</button>
+</form>
 
 <div class="flex items-center">
 	<h2 class="text-2xl font-bold">Images</h2>

@@ -50,10 +50,21 @@ export const load = (async ({ locals: { supabase } }) => {
 		};
 	});
 
-	return { images: images || [], queue: queue || [] };
+	// getting sleep time
+	const { data: sleepSeconds, error: timeError } = await supabase.rpc('getSleepTime');
+	if (timeError) return { error: timeError };
+
+	return { images: images || [], queue: queue || [], sleepSeconds };
 }) satisfies PageServerLoad;
 
 export const actions = {
+	updateTime: async ({ request, locals: { supabase } }) => {
+		const formData = await request.formData();
+		const seconds = formData.get('seconds') as string;
+
+		const { error } = await supabase.from('sleep_time').update({ seconds }).gt('id', -1);
+		return { error };
+	},
 	uploadImage: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 		const file = formData.get('file') as File;
