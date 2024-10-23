@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { deleting, uploading } from '$lib/stores';
 	import type { ActionData, PageData } from './$types';
 	import ActionButton from './ActionButton.svelte';
 	import ImageControl from './ImageControl.svelte';
@@ -46,6 +47,7 @@
 						desc="Remove"
 						position={queueItem.position}
 						fa="fa-solid fa-trash-can"
+						image_id={queueItem.image.id}
 						del
 					/>
 				</ImageControl>
@@ -56,7 +58,15 @@
 
 <form action="?/updateTime" method="post" class="flex items-center gap-2 w-full max-w-md">
 	<label for="time" class="badge badge-neutral">{secondsToTime(sleepSeconds)}</label>
-	<input bind:value={sleepSeconds} type="range" min="0" max="86400" step="1800" class="range" name="seconds" />
+	<input
+		bind:value={sleepSeconds}
+		type="range"
+		min="0"
+		max="86400"
+		step="1800"
+		class="range"
+		name="seconds"
+	/>
 	<button type="submit" class="btn btn-success btn-sm btn-circle">
 		<i class="fa-solid fa-right-from-bracket"></i>
 	</button>
@@ -69,27 +79,37 @@
 </div>
 
 <div class="grid grid-cols-2 sm:flex flex-wrap max-w-5xl gap-4 justify-center">
+	{#if $uploading != ''}
+		<div
+			class="rounded-box shadow border border-base-300 bg-base-200 sm:h-52 w-auto flex justify-center items-center' 
+			{$uploading == 'portrait' ? 'aspect-[448/600]' : 'aspect-[600/448] col-span-2'} "
+		>
+			<span class="loading loading-spinner loading-md"></span>
+		</div>
+	{/if}
 	{#each data.images as image}
-		<ImageControl {image}>
-			<ActionButton
-				name="addToQueueEnd"
-				desc="Add to end"
-				image_id={image.id}
-				fa="fa-solid fa-right-to-bracket"
-			/>
-			<ActionButton
-				name="addToQueueFront"
-				desc="Add to front"
-				image_id={image.id}
-				fa="fa-solid fa-right-to-bracket rotate-180"
-			/>
-			<ActionButton
-				name="deleteImage"
-				desc="Delete"
-				image_id={image.id}
-				fa="fa-solid fa-trash-can"
-				del
-			/>
-		</ImageControl>
+		{#if !$deleting.includes(image.id)}
+			<ImageControl {image}>
+				<ActionButton
+					name="addToQueueEnd"
+					desc="Add to end"
+					image_id={image.id}
+					fa="fa-solid fa-right-to-bracket"
+				/>
+				<ActionButton
+					name="addToQueueFront"
+					desc="Add to front"
+					image_id={image.id}
+					fa="fa-solid fa-right-to-bracket rotate-180"
+				/>
+				<ActionButton
+					name="deleteImage"
+					desc="Delete"
+					image_id={image.id}
+					fa="fa-solid fa-trash-can"
+					del
+				/>
+			</ImageControl>
+		{/if}
 	{/each}
 </div>

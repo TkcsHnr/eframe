@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { uploading } from '$lib/stores';
 	let upload_modal: HTMLDialogElement;
 
 	$: portrait = false;
@@ -24,6 +26,14 @@
 			action="?/uploadImage"
 			enctype="multipart/form-data"
 			class="flex flex-wrap justify-between gap-4"
+			use:enhance={() => {
+				$uploading = portrait ? "portrait" : "landscape";
+				upload_modal.close();
+				return async ({ update }) => {
+					await update();
+					$uploading = "";
+				};
+			}}
 		>
 			<input
 				type="file"
