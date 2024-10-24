@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { uploading } from '$lib/stores';
+	import { page } from '$app/stores';
+	import { images, uploading } from '$lib/stores';
 	let upload_modal: HTMLDialogElement;
 
 	$: portrait = false;
@@ -31,6 +32,7 @@
 				upload_modal.close();
 				return async ({ update }) => {
 					await update();
+					$images = [$page.data.images[0], ...$images]; 
 					$uploading = "";
 				};
 			}}

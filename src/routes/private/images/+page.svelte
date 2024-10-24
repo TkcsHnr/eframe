@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { deleting, uploading } from '$lib/stores';
+	import { deleting, images, queue, queueDeleting, uploading } from '$lib/stores';
+	import { onMount } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import ActionButton from './ActionButton.svelte';
 	import ImageControl from './ImageControl.svelte';
 	import UploadModal from './UploadModal.svelte';
+	import Placeholder from './Placeholder.svelte';
 
 	export let data: PageData;
 	export let form: ActionData;
@@ -19,6 +21,11 @@
 
 		return hours + ':' + minutes;
 	}
+	onMount(() => {
+		$images = data.images || [];
+		$queue = data.queue || [];
+	});
+	
 </script>
 
 {#if form?.error}
@@ -27,7 +34,7 @@
 	</div>
 {/if}
 
-{#if data.queue && data.queue.length > 0}
+{#if $queue.length > 0}
 	<div class="flex items-center">
 		<h2 class="text-2xl font-bold">Queue</h2>
 		<div class="divider divider-horizontal"></div>
@@ -39,18 +46,23 @@
 		</form>
 	</div>
 	<div class="carousel carousel-center bg-neutral rounded-box max-w-5xl space-x-4 p-4">
-		{#each data.queue as queueItem}
+		{#each $queue as queueItem}
 			<div class="carousel-item">
-				<ImageControl image={queueItem.image} queue>
-					<ActionButton
-						name="deleteFromQueue"
-						desc="Remove"
-						position={queueItem.position}
-						fa="fa-solid fa-trash-can"
-						image_id={queueItem.image.id}
-						del
-					/>
-				</ImageControl>
+				{#if $queueDeleting.includes(queueItem.id)}
+					<Placeholder portrait={queueItem.image.portrait}>
+						<span class="loading loading-spinner loading-md text-error"></span>
+					</Placeholder>
+				{:else}
+					<ImageControl image={queueItem.image} queue>
+						<ActionButton
+							name="deleteFromQueue"
+							desc="Remove"
+							fa="fa-solid fa-trash-can"
+							id={queueItem.id}
+							del
+						/>
+					</ImageControl>
+				{/if}
 			</div>
 		{/each}
 	</div>
@@ -80,32 +92,33 @@
 
 <div class="grid grid-cols-2 sm:flex flex-wrap max-w-5xl gap-4 justify-center">
 	{#if $uploading != ''}
-		<div
-			class="rounded-box shadow border border-base-300 bg-base-200 sm:h-52 w-auto flex justify-center items-center' 
-			{$uploading == 'portrait' ? 'aspect-[448/600]' : 'aspect-[600/448] col-span-2'} "
-		>
+		<Placeholder portrait={$uploading == 'portrait'}>
 			<span class="loading loading-spinner loading-md"></span>
-		</div>
+		</Placeholder>
 	{/if}
-	{#each data.images as image}
-		{#if !$deleting.includes(image.id)}
+	{#each $images as image}
+		{#if $deleting.includes(image.id)}
+			<Placeholder portrait={image.portrait}>
+				<span class="loading loading-spinner loading-md text-error"></span>
+			</Placeholder>
+		{:else}
 			<ImageControl {image}>
 				<ActionButton
 					name="addToQueueEnd"
 					desc="Add to end"
-					image_id={image.id}
+					id={image.id}
 					fa="fa-solid fa-right-to-bracket"
 				/>
 				<ActionButton
 					name="addToQueueFront"
 					desc="Add to front"
-					image_id={image.id}
+					id={image.id}
 					fa="fa-solid fa-right-to-bracket rotate-180"
 				/>
 				<ActionButton
 					name="deleteImage"
 					desc="Delete"
-					image_id={image.id}
+					id={image.id}
 					fa="fa-solid fa-trash-can"
 					del
 				/>

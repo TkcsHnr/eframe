@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 type ImageRecord = { id: number; portrait: boolean };
 type Image = { id: number; pngUrl: string; portrait: boolean };
 type QueueRecord = { id: number; image_id: number; position: number };
+type Queue = {id: number; position: number; image:Image}[];
 type UrlObject = { path: string; signedUrl: string };
 
 export const load = (async ({ locals: { supabase } }) => {
@@ -28,7 +29,7 @@ export const load = (async ({ locals: { supabase } }) => {
 	});
 
 	// creating image objects
-	const images = imageData.map((img: ImageRecord) => {
+	const images: Image[] = imageData.map((img: ImageRecord) => {
 		const pngUrl = signedUrls[`${img.id}.png`];
 
 		return { id: img.id, pngUrl, portrait: img.portrait };
@@ -41,7 +42,7 @@ export const load = (async ({ locals: { supabase } }) => {
 		.order('position');
 	if (queueError) return { error: queueError };
 
-	const queue = queueImages.map((record: QueueRecord) => {
+	const queue: Queue = queueImages.map((record: QueueRecord) => {
 		const image = images.find((img: Image) => img.id == record.image_id);
 		return {
 			id: record.id,
@@ -96,7 +97,7 @@ export const actions = {
 	},
 	deleteImage: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const id = formData.get('image_id');
+		const id = formData.get('id');
 
 		// removing occurences from queue
 		const { error: queueError } = await supabase.from('queue').delete().eq('image_id', id);
@@ -118,7 +119,7 @@ export const actions = {
 	},
 	addToQueueEnd: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const image_id = formData.get('image_id');
+		const image_id = formData.get('id');
 
 		const { error } = await supabase.rpc('addToQueueEnd', { image_id });
 
@@ -126,7 +127,7 @@ export const actions = {
 	},
 	addToQueueFront: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const image_id = formData.get('image_id');
+		const image_id = formData.get('id');
 
 		const { error } = await supabase.rpc('addToQueueFront', { image_id });
 
@@ -134,9 +135,9 @@ export const actions = {
 	},
 	deleteFromQueue: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const position = formData.get('position');
+		const id = formData.get('id');
 
-		const { error: deleteError } = await supabase.from('queue').delete().eq('position', position);
+		const { error: deleteError } = await supabase.from('queue').delete().eq('id', id);
 		if (deleteError) return { error: deleteError };
 
 		const { error } = await supabase.rpc('normalizePositions');

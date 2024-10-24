@@ -1,11 +1,9 @@
 <script>
-	import { fly } from "svelte/transition";
-
 	export let image;
 	export let queue = false;
 </script>
 
-<div class="dropdown overflow-hidden rounded-box" class:col-span-2={!image.portrait} transition:fly>
+<div class="dropdown overflow-hidden rounded-box" class:col-span-2={!image.portrait}>
 	<div
 		tabindex="0"
 		role="button"
