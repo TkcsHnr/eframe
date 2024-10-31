@@ -51,19 +51,19 @@ export const load = (async ({ locals: { supabase } }) => {
 		};
 	});
 
-	// getting sleep time
-	const { data: sleepSeconds, error: timeError } = await supabase.rpc('getSleepTime');
-	if (timeError) return { error: timeError };
+	// getting wakeup time
+	const { data: wakeupData, error: wakeupError } = await supabase.from('wakeup').select('wakeup_time').single();
+	if (wakeupError) return { error: wakeupError };
 
-	return { images: images || [], queue: queue || [], sleepSeconds };
+	return { images: images || [], queue: queue || [], wakeupTime: wakeupData.wakeup_time };
 }) satisfies PageServerLoad;
 
 export const actions = {
 	updateTime: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
-		const seconds = formData.get('seconds') as string;
+		const wakeup_time = formData.get('wakeup_time') as string;
 
-		const { error } = await supabase.from('sleep_time').update({ seconds }).gt('id', -1);
+		const { error } = await supabase.from('wakeup').update({ wakeup_time }).gt('id', -1);
 		return { error };
 	},
 	uploadImage: async ({ request, locals: { supabase } }) => {

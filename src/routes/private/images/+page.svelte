@@ -6,26 +6,15 @@
 	import ImageControl from './ImageControl.svelte';
 	import UploadModal from './UploadModal.svelte';
 	import Placeholder from './Placeholder.svelte';
+	import { applyAction, enhance } from '$app/forms';
 
 	export let data: PageData;
 	export let form: ActionData;
 
-	let sleepSeconds = data.sleepSeconds;
-	function secondsToTime(seconds: number) {
-		let hours = Math.floor(seconds / 3600)
-			.toString()
-			.padStart(2, '0');
-		let minutes = Math.floor((seconds % 3600) / 60)
-			.toString()
-			.padStart(2, '0');
-
-		return hours + ':' + minutes;
-	}
 	onMount(() => {
 		$images = data.images || [];
 		$queue = data.queue || [];
 	});
-	
 </script>
 
 {#if form?.error}
@@ -68,18 +57,24 @@
 	</div>
 {/if}
 
-<form action="?/updateTime" method="post" class="flex items-center gap-2 w-full max-w-md">
-	<label for="time" class="badge badge-neutral">{secondsToTime(sleepSeconds)}</label>
+<form
+	action="?/updateTime"
+	method="post"
+	class="join"
+	use:enhance={() => {
+		return async ({ result }) => {
+			await applyAction(result);
+		};
+	}}
+>
 	<input
-		bind:value={sleepSeconds}
-		type="range"
-		min="0"
-		max="86400"
-		step="1800"
-		class="range"
-		name="seconds"
+		name="wakeup_time"
+		type="time"
+		value={data.wakeupTime}
+		class="input input-bordered join-item"
+		step="60"
 	/>
-	<button type="submit" class="btn btn-success btn-sm btn-circle">
+	<button type="submit" class="btn btn-success join-item">
 		<i class="fa-solid fa-right-from-bracket"></i>
 	</button>
 </form>
